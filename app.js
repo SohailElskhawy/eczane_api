@@ -1,9 +1,12 @@
 const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(cors());
 
 const scrapeDrugs = async () => {
     const baseUrl = 'https://www.ilacabak.com/aralist.php?Id=';
