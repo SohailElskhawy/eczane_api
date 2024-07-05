@@ -1,55 +1,51 @@
 const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const cors = require('cors');
+const cors = require('cors'); // Ensure cors is installed and imported
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 
-const scrapeDrugs = async () => {
-    const baseUrl = 'https://www.ilacabak.com/aralist.php?Id=';
-    const drugsData = [];
-    const alphabets = "ABCDEFGHIJKLMNOPRSTUVXYZ".split('');
+const baseUrl = 'https://www.ilacabak.com/aralist.php?Id=';
 
-    for (const letter of alphabets) {
-        const url = `${baseUrl}${letter}`;
-        try {
-            const response = await axios.get(url);
-            const $ = cheerio.load(response.data);
+// Define a route to fetch drugs by letter
+app.get('/scrape-drugs/:letter', async (req, res) => {
+    const letter = req.params.letter.toUpperCase(); // Ensure letter is uppercase
+    const url = `${baseUrl}${letter}`;
 
-            $('li').each((index, element) => {
-                const drugNameTag = $(element).find('div.listeilac');
-                const priceTag = $(element).find('div.listefiyat');
+    try {
+        const response = await axios.get(url);
+        const $ = cheerio.load(response.data);
 
-                if (drugNameTag.length && priceTag.length) {
-                    const drugNameA = drugNameTag.find('a');
-                    const priceFont = priceTag.find('font');
+        const drugsData = [];
 
-                    if (drugNameA.length && priceFont.length) {
-                        const drugName = drugNameA.text().trim();
-                        const price = priceFont.text().trim();
+        $('li').each((index, element) => {
+            const drugNameTag = $(element).find('div.listeilac');
+            const priceTag = $(element).find('div.listefiyat');
 
-                        drugsData.push({
-                            drug: drugName,
-                            price: price,
-                        });
-                    }
+            if (drugNameTag.length && priceTag.length) {
+                const drugNameA = drugNameTag.find('a');
+                const priceFont = priceTag.find('font');
+
+                if (drugNameA.length && priceFont.length) {
+                    const drugName = drugNameA.text().trim();
+                    const price = priceFont.text().trim();
+
+                    drugsData.push({
+                        drug: drugName,
+                        price: price,
+                    });
                 }
-            });
-        } catch (error) {
-            console.error(`Failed to fetch URL: ${url}`);
-        }
+            }
+        });
+
+        res.json(drugsData);
+    } catch (error) {
+        console.error(`Failed to fetch URL: ${url}`, error);
+        res.status(500).json({ error: 'Failed to fetch data' });
     }
-
-    console.log(drugsData);
-    return drugsData;
-};
-
-app.get('/scrape-drugs', async (req, res) => {
-    const drugsData = await scrapeDrugs();
-    res.json(drugsData);
 });
 
 app.listen(port, () => {
