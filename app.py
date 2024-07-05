@@ -46,3 +46,8 @@ CORS(app)  # Apply CORS to your Flask app, allowing all origins by default
 @app.route('/drugs/<letter>')
 def drugs(letter):
     return jsonify(scrape_drugs(letter))
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
