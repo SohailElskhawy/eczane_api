@@ -48,6 +48,41 @@ app.get('/scrape-drugs/:letter', async (req, res) => {
     }
 });
 
+
+app.get('/scrape-all-drugs', async (req, res) => {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const drugsData = [];
+    for(const letter of alphabet) {
+        const url = `${baseUrl}${letter}`;
+        try {
+            const response = await axios.get(url);
+            const $ = cheerio.load(response.data);
+
+            $('li').each((index, element) => {
+                const drugNameTag = $(element).find('div.listeilac');
+                const priceTag = $(element).find('div.listefiyat');
+
+                if (drugNameTag.length && priceTag.length) {
+                    const drugNameA = drugNameTag.find('a');
+                    const priceFont = priceTag.find('font');
+
+                    if (drugNameA.length && priceFont.length) {
+                        const drugName = drugNameA.text().trim();
+                        const price = priceFont.text().trim();
+
+                        drugsData.push({
+                            drug: drugName,
+                            price: price,
+                        });
+                    }
+                }
+            });
+        } catch (error) {
+            console.error(`Failed to fetch URL: ${url}`, error);
+        }
+    }
+})
+
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
