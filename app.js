@@ -49,12 +49,14 @@ app.get('/scrape-drugs/:letter', async (req, res) => {
 });
 
 
-app.get('/scrape-all-drugs', async (req, res) => {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+app.get('/scrape-drugs', async (req, res) => {
     const drugsData = [];
-    for(const letter of alphabet) {
-        const url = `${baseUrl}${letter}`;
-        try {
+
+    try {
+        for (let i = 65; i <= 90; i++) {
+            const letter = String.fromCharCode(i).toUpperCase();
+            const url = `${baseUrl}${letter}`;
+
             const response = await axios.get(url);
             const $ = cheerio.load(response.data);
 
@@ -77,11 +79,14 @@ app.get('/scrape-all-drugs', async (req, res) => {
                     }
                 }
             });
-        } catch (error) {
-            console.error(`Failed to fetch URL: ${url}`, error);
         }
+
+        res.json(drugsData);
+    } catch (error) {
+        console.error('Failed to fetch data', error);
+        res.status(500).json({ error: 'Failed to fetch data' });
     }
-})
+});
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
