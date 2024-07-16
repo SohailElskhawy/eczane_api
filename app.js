@@ -49,45 +49,10 @@ app.get('/scrape-drugs/:letter', async (req, res) => {
 });
 
 
-app.get('/scrape-drugs', async (req, res) => {
-    const drugsData = [];
-
-    try {
-        for (let i = 65; i <= 90; i++) {
-            const letter = String.fromCharCode(i).toUpperCase();
-            const url = `${baseUrl}${letter}`;
-
-            const response = await axios.get(url);
-            const $ = cheerio.load(response.data);
-
-            $('li').each((index, element) => {
-                const drugNameTag = $(element).find('div.listeilac');
-                const priceTag = $(element).find('div.listefiyat');
-
-                if (drugNameTag.length && priceTag.length) {
-                    const drugNameA = drugNameTag.find('a');
-                    const priceFont = priceTag.find('font');
-
-                    if (drugNameA.length && priceFont.length) {
-                        const drugName = drugNameA.text().trim();
-                        const price = priceFont.text().trim();
-
-                        drugsData.push({
-                            drug: drugName,
-                            price: price,
-                        });
-                    }
-                }
-            });
-        }
-
-        res.json(drugsData);
-    } catch (error) {
-        console.error('Failed to fetch data', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
 });
 
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on port ${port}`);
 });
